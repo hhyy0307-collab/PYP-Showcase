@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 팔레트 유스파티 쇼케이스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0A0A0F;--bg2:#13131C;--bg3:#1C1C2A;
+  --text:#F0F0FF;--text2:#A0A0C0;--border:rgba(255,255,255,0.08);
+  --accent:#FF3B6B;--accent2:#6C47FF;--accent3:#00C896;--accent4:#FFB800;
+  --sidebar:220px;--radius:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:1.25rem 0;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;}
+.sidebar-logo{font-family:'Black Han Sans',sans-serif;font-size:16px;padding:.5rem 1.2rem 1.2rem;background:linear-gradient(135deg,#fff 0%,#c0b0ff 50%,#ff6b9d 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-bottom:1px solid var(--border);margin-bottom:.75rem;line-height:1.3;}
+.sidebar-logo span{display:block;font-size:10px;font-family:'Noto Sans KR',sans-serif;-webkit-text-fill-color:rgba(200,200,220,.5);}
+.menu-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:.7rem 1.2rem;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:#fff;background:none;border:none;cursor:pointer;transition:all .2s;text-align:left;border-left:2px solid transparent;}
+.menu-item:hover{color:#000;background:#fff;}
+.menu-item.active{color:#fff;border-left-color:var(--accent2);background:var(--bg3);}
+.menu-arrow{font-size:10px;transition:transform .2s;color:#fff;}
+.menu-item:hover .menu-arrow{color:#000;}
+.menu-arrow.open{transform:rotate(90deg);}
+.submenu{overflow:hidden;max-height:0;transition:max-height .25s ease;}
+.submenu.open{max-height:300px;}
+.sub-item{display:flex;align-items:center;gap:8px;width:100%;padding:.55rem 1.2rem .55rem 2rem;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:#fff;background:none;border:none;cursor:pointer;transition:all .2s;text-align:left;border-left:2px solid transparent;}
+.sub-item:hover{color:#000;background:#fff;}
+.sub-item.active{color:#fff;border-left-color:var(--accent2);background:rgba(108,71,255,.18);}
+.sub-icon{font-size:14px;width:18px;text-align:center;}
+.sub-count{margin-left:auto;font-size:10px;background:rgba(255,255,255,.12);border-radius:100px;padding:1px 7px;color:#fff;}
+.sub-item:hover .sub-count{background:rgba(0,0,0,.08);color:#000;}
+.sub-item.active .sub-count{background:rgba(108,71,255,.35);color:#c0b0ff;}
+.sidebar-divider{height:1px;background:var(--border);margin:.5rem .8rem;}
+.sidebar-footer{margin-top:auto;padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.sidebar-stat{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;}
+.sidebar-stat strong{color:#fff;}
+
+/* MAIN */
+.main{flex:1;padding:2rem 2.5rem;overflow-y:auto;background:var(--bg);}
+.cat-header{margin-bottom:1.5rem;}
+.cat-title{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--text);margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem;}
+.cat-desc{font-size:13px;color:var(--text2);line-height:1.7;}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
+.team-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);box-shadow:0 12px 36px rgba(0,0,0,.4);}
+.card-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden;}
+.card-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.card-badge{position:absolute;top:9px;right:9px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px;z-index:1;}
+.b-game{background:rgba(108,71,255,.3);color:#A98BFF;border:1px solid rgba(108,71,255,.5);}
+.b-meta{background:rgba(0,200,150,.2);color:#5EEAC5;border:1px solid rgba(0,200,150,.4);}
+.b-story{background:rgba(255,184,0,.2);color:#FFCF55;border:1px solid rgba(255,184,0,.4);}
+.b-art{background:rgba(255,59,107,.2);color:#FF8FAA;border:1px solid rgba(255,59,107,.4);}
+.card-body{padding:.85rem 1rem .95rem;}
+.card-pname{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--text);margin-bottom:3px;}
+.card-team{font-size:11px;color:var(--accent2);font-weight:500;margin-bottom:3px;}
+.card-org{font-size:11px;color:var(--text2);}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding:7px 1rem;border-top:1px solid var(--border);}
+.card-cmt{font-size:11px;color:var(--text2);}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text2);font-size:13px;gap:8px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:center;justify-content:center;padding:2rem;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:760px;max-height:88vh;overflow-y:auto;position:relative;}
+.modal-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;}
+.modal-close:hover{background:rgba(255,255,255,.18);}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;margin-top:.5rem;}
+.modal-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;margin-bottom:-1px;transition:all .2s;}
+.modal-tab:hover{color:#fff;}
+.modal-tab.active{color:#fff;border-bottom-color:var(--accent2);}
+
+/* PROJECT MODAL */
+.modal-type-bar{padding:1.5rem 1.5rem .75rem;}
+.modal-type-badge{font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;display:inline-block;}
+.modal-title{font-family:'Black Han Sans',sans-serif;font-size:26px;color:var(--text);padding:0 1.5rem .75rem;line-height:1.2;}
+.thumb-wrap{margin:0 1.5rem;border-radius:12px;overflow:hidden;position:relative;background:var(--bg);aspect-ratio:4/3;cursor:pointer;}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.thumb-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;font-size:48px;}
+.thumb-placeholder span{font-size:12px;color:var(--text2);}
+.thumb-link-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.thumb-wrap:hover .thumb-link-overlay{background:rgba(0,0,0,.45);}
+.thumb-link-btn{opacity:0;background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.thumb-wrap:hover .thumb-link-btn{opacity:1;}
+.modal-meta{display:flex;flex-wrap:wrap;gap:8px;padding:1rem 1.5rem .5rem;}
+.meta-chip{font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:4px 12px;border-radius:100px;}
+.meta-chip strong{color:var(--text);}
+.modal-desc{padding:.75rem 1.5rem 1rem;font-size:13px;color:#C0C0D8;line-height:1.8;}
+.modal-desc-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text2);margin-bottom:.4rem;}
+.modal-edit-btn{margin:0 1.5rem 1rem;display:flex;align-items:center;gap:6px;background:rgba(108,71,255,.12);border:1px solid rgba(108,71,255,.3);border-radius:8px;color:#a98bff;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;padding:8px 16px;cursor:pointer;width:fit-content;transition:all .2s;}
+.modal-edit-btn:hover{background:rgba(108,71,255,.25);}
+
+/* FEEDBACK */
+.feedback-section{padding:0 1.5rem 1.5rem;}
+.feedback-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
+.feedback-count{font-size:11px;color:var(--text2);font-weight:400;}
+.feedback-form{background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1rem;margin-bottom:1.25rem;}
+.form-row1{display:flex;gap:8px;margin-bottom:8px;}
+.form-select{background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:12px;padding:7px 28px 7px 10px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A0A0C0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .2s;}
+.form-select:focus{border-color:var(--accent2);}
+.form-select option{background:var(--bg3);}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 11px;resize:none;outline:none;line-height:1.6;transition:border-color .2s;margin-bottom:8px;}
+.form-textarea:focus{border-color:var(--accent2);}
+.form-textarea::placeholder{color:#606080;}
+.form-bottom{display:flex;align-items:center;justify-content:space-between;}
+.form-hint{font-size:11px;color:#606080;}
+.btn-submit{background:var(--accent2);border:none;border-radius:8px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;transition:opacity .2s;}
+.btn-submit:hover{opacity:.85;}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.ftag{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px;margin-right:6px;letter-spacing:.04em;vertical-align:middle;}
+.ftag-story{background:rgba(108,71,255,.25);color:#c0a8ff;border:1px solid rgba(108,71,255,.4);}
+.ftag-design{background:rgba(255,59,107,.2);color:#ffaac0;border:1px solid rgba(255,59,107,.35);}
+.ftag-sound{background:rgba(0,200,150,.18);color:#6eecc8;border:1px solid rgba(0,200,150,.35);}
+.ftag-play{background:rgba(255,184,0,.2);color:#ffd460;border:1px solid rgba(255,184,0,.35);}
+.ftag-level{background:rgba(255,120,60,.2);color:#ffb090;border:1px solid rgba(255,120,60,.35);}
+.ftag-etc{background:rgba(160,160,192,.15);color:#c0c0e0;border:1px solid rgba(160,160,192,.3);}
+.feedback-list{display:flex;flex-direction:column;gap:.75rem;}
+.feedback-item{background:var(--bg);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.9rem 1rem;}
+.fi-header{display:flex;align-items:center;gap:6px;margin-bottom:.5rem;flex-wrap:wrap;}
+.fi-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.fi-team{font-size:12px;font-weight:700;color:var(--text);}
+.fi-time{font-size:10px;color:#606080;margin-left:auto;}
+.fi-text{font-size:13px;color:#C8C8E0;line-height:1.7;}
+.fi-like{display:flex;align-items:center;gap:5px;margin-top:.6rem;font-size:11px;color:#606080;cursor:pointer;width:fit-content;transition:color .2s;background:none;border:none;font-family:'Noto Sans KR',sans-serif;}
+.fi-like:hover{color:var(--accent);}
+.fi-like.liked{color:var(--accent);}
+.no-feedback{text-align:center;padding:2rem;font-size:13px;color:#606080;}
+
+/* EDIT FORM */
+.modal-edit{padding:1.5rem;}
+.edit-title{font-family:'Black Han Sans',sans-serif;font-size:17px;color:var(--text);margin-bottom:1.25rem;}
+.field{margin-bottom:1rem;}
+.field-label{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text2);margin-bottom:.4rem;}
+.field-input{width:100%;background:var(--bg);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 12px;outline:none;transition:border-color .2s;}
+.field-input:focus{border-color:var(--accent2);}
+.field-input.textarea{resize:vertical;min-height:80px;line-height:1.7;}
+.field-input::placeholder{color:#505070;}
+.field-hint{font-size:11px;color:#505070;margin-top:4px;}
+.thumb-upload{width:100%;aspect-ratio:4/3;background:var(--bg);border:2px dashed rgba(255,255,255,.12);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;}
+.thumb-upload:hover{border-color:var(--accent2);}
+.thumb-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.thumb-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.edit-actions{display:flex;gap:8px;margin-top:1.25rem;}
+.btn-save{flex:1;background:var(--accent2);border:none;border-radius:8px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;padding:10px;cursor:pointer;transition:opacity .2s;}
+.btn-save:hover{opacity:.85;}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;}
+.btn-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:10px 20px;cursor:pointer;}
+
+/* STORY PAGE */
+.story-hero{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:2rem;position:relative;overflow:hidden;}
+.story-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(108,71,255,.2),transparent 55%),radial-gradient(ellipse at 85% 50%,rgba(255,59,107,.15),transparent 55%);pointer-events:none;}
+.story-hero-label{font-size:10px;font-weight:700;letter-spacing:.12em;color:#a98bff;margin-bottom:.5rem;}
+.story-hero h2{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--text);margin-bottom:.5rem;}
+.story-hero p{font-size:13px;color:var(--text2);line-height:1.7;}
+.story-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.story-team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
+.story-team-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);box-shadow:0 12px 36px rgba(0,0,0,.4);}
+.stc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;}
+.stc-emoji{font-size:28px;}
+.stc-type-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px;}
+.stc-team{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--text);margin-bottom:3px;}
+.stc-org{font-size:11px;color:var(--text2);margin-bottom:.8rem;}
+.stc-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.stc-pill{font-size:10px;padding:2px 8px;border-radius:100px;}
+.pill-filled{background:rgba(108,71,255,.2);color:#c0a8ff;border:1px solid rgba(108,71,255,.3);}
+.pill-empty{background:rgba(255,255,255,.05);color:#606080;border:1px solid rgba(255,255,255,.06);}
+.stc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.06);}
+.status-done{font-size:10px;color:#00C896;}
+.status-empty{font-size:10px;color:#606080;}
+.story-block{background:var(--bg);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:.9rem;}
+.sb-label{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:.6rem;}
+.label-thrill{color:var(--accent4);}
+.label-hard{color:var(--accent);}
+.label-how{color:var(--accent3);}
+.sb-content{font-size:13px;color:#C8C8E0;line-height:1.8;}
+.sb-empty{font-size:12px;color:#505070;font-style:italic;}
+.know-keyword{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;margin-bottom:.6rem;background:rgba(0,200,150,.15);color:#5eeac5;border:1px solid rgba(0,200,150,.3);}
+.sv-header{padding:1.5rem 1.5rem 1rem;}
+.sv-type{font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;display:inline-block;margin-bottom:.75rem;}
+.sv-team{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--text);margin-bottom:4px;}
+.sv-org{font-size:12px;color:var(--text2);}
+.sv-members{display:flex;flex-wrap:wrap;gap:6px;margin-top:.6rem;}
+.sv-member{font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:3px 10px;border-radius:100px;}
+.sv-body{padding:0 1.5rem 1rem;}
+.sv-edit-btn{margin:0 1.5rem 1.5rem;display:flex;align-items:center;gap:6px;background:rgba(108,71,255,.12);border:1px solid rgba(108,71,255,.3);border-radius:8px;color:#a98bff;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;padding:8px 16px;cursor:pointer;width:fit-content;transition:all .2s;}
+.sv-edit-btn:hover{background:rgba(108,71,255,.25);}
+.know-row{display:flex;gap:8px;align-items:flex-start;}
+.know-select{background:var(--bg);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 28px 9px 12px;outline:none;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A0A0C0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .2s;}
+.know-select:focus{border-color:var(--accent3);}
+.know-select option{background:var(--bg3);}
+.know-textarea{flex:1;background:var(--bg);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 12px;resize:vertical;min-height:80px;line-height:1.7;outline:none;transition:border-color .2s;}
+.know-textarea:focus{border-color:var(--accent3);}
+.know-textarea::placeholder{color:#505070;}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1C1C2A;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 20px;font-size:13px;color:#fff;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">팔레트 쇼케이스<span>2026 유스파티</span></div>
+    <button class="menu-item active" id="menu-project" onclick="toggleProject()">
+      PYP 프로젝트<span class="menu-arrow open" id="arrow-project">›</span>
+    </button>
+    <div class="submenu open" id="sub-project">
+      <button class="sub-item active" id="sub-all" onclick="filterCat('all',this)"><span class="sub-icon">✦</span>전체<span class="sub-count" id="cnt-all"></span></button>
+      <button class="sub-item" id="sub-game" onclick="filterCat('game',this)"><span class="sub-icon">🎮</span>게임<span class="sub-count" id="cnt-game"></span></button>
+      <button class="sub-item" id="sub-meta" onclick="filterCat('meta',this)"><span class="sub-icon">🌐</span>메타버스<span class="sub-count" id="cnt-meta"></span></button>
+      <button class="sub-item" id="sub-story" onclick="filterCat('story',this)"><span class="sub-icon">📖</span>스토리텔링<span class="sub-count" id="cnt-story"></span></button>
+      <button class="sub-item" id="sub-art" onclick="filterCat('art',this)"><span class="sub-icon">🎨</span>미디어&amp;아트<span class="sub-count" id="cnt-art"></span></button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <button class="menu-item" id="menu-story" onclick="showStoryPage(this)">PYP 스토리</button>
+    <div class="sidebar-footer">
+      <div class="sidebar-stat"><span>참여 팀</span><strong>18팀</strong></div>
+      <div class="sidebar-stat"><span>창작자</span><strong>66명</strong></div>
+      <div class="sidebar-stat"><span>창작 유형</span><strong>4개</strong></div>
+    </div>
+  </aside>
+  <div class="main" id="main-area"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Supabase 초기화 ──
+const SUPABASE_URL = 'https://wdeugtfsqhimdsgiaeag.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkZXVndGZzcWhpbWRzZ2lhZWFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MjU3NDQsImV4cCI6MjA5NjAwMTc0NH0.8guI_htoMKBbl3YgqJN_ZxD4DuQ7G1XwFv77S19AbI0';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── 상수 ──
+const CI={all:{emoji:'✦',label:'전체 프로젝트',desc:'18개 팀, 66명의 창작자가 완성한 모든 프로젝트를 한눈에 확인하세요.'},game:{emoji:'🎮',label:'게임',desc:'직접 기획하고 개발한 인디 게임 프로젝트입니다.'},meta:{emoji:'🌐',label:'메타버스',desc:'가상 공간에서 펼쳐지는 창의적인 세계 구축 프로젝트입니다.'},story:{emoji:'📖',label:'스토리텔링',desc:'소설, 웹툰, 그림책 등 이야기로 표현한 창작 프로젝트입니다.'},art:{emoji:'🎨',label:'미디어&아트',desc:'영상, 음악, 일러스트 등 감각적인 미디어 창작 프로젝트입니다.'}};
+const TB={game:'linear-gradient(135deg,#1a0e3a,#2d1a6b)',meta:'linear-gradient(135deg,#0e3a2a,#1a6b4f)',story:'linear-gradient(135deg,#3a2e0e,#6b5a1a)',art:'linear-gradient(135deg,#3a0e1a,#6b1a2d)'};
+const TBADGE={game:'b-game',meta:'b-meta',story:'b-story',art:'b-art'};
+const TL={game:'게임',meta:'메타버스',story:'스토리텔링',art:'미디어&아트'};
+const TC={game:'#a98bff',meta:'#5eeac5',story:'#ffcf55',art:'#ff8faa'};
+const TC2={game:'rgba(108,71,255,.15)',meta:'rgba(0,200,150,.12)',story:'rgba(255,184,0,.12)',art:'rgba(255,59,107,.12)'};
+const BS={game:'background:rgba(108,71,255,.3);color:#A98BFF;border:1px solid rgba(108,71,255,.5)',meta:'background:rgba(0,200,150,.2);color:#5EEAC5;border:1px solid rgba(0,200,150,.4)',story:'background:rgba(255,184,0,.2);color:#FFCF55;border:1px solid rgba(255,184,0,.4)',art:'background:rgba(255,59,107,.2);color:#FF8FAA;border:1px solid rgba(255,59,107,.4)'};
+const FCATS=[{val:'story',label:'스토리',cls:'ftag-story'},{val:'design',label:'디자인',cls:'ftag-design'},{val:'sound',label:'사운드',cls:'ftag-sound'},{val:'play',label:'플레이방식',cls:'ftag-play'},{val:'level',label:'난이도',cls:'ftag-level'},{val:'etc',label:'기타',cls:'ftag-etc'}];
+const KNOW_KEYWORDS=['아이디어를 내는','막힐 때 돌파하는','완성도를 높이는','시간을 관리하는','팀원들과 협력하는'];
+const AV_COLORS=['#6C47FF','#FF3B6B','#00C896','#FFB800','#FF64B4','#40C8FF'];
+
+function fcatInfo(val){return FCATS.find(f=>f.val===val)||FCATS[5];}
+
+// ── 유틸 ──
+function showToast(msg, duration=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),duration);
+}
+function timeAgo(ts){
+  const diff=(Date.now()-new Date(ts))/1000;
+  if(diff<60)return '방금 전';
+  if(diff<3600)return Math.floor(diff/60)+'분 전';
+  if(diff<86400)return Math.floor(diff/3600)+'시간 전';
+  return Math.floor(diff/86400)+'일 전';
+}
+
+// ── 데이터 로드 ──
+let teamsCache=[];
+let feedbackCounts={};
+
+async function loadTeams(){
+  const {data,error}=await sb.from('teams').select('*').order('id');
+  if(error){console.error(error);return[];}
+  return data||[];
+}
+async function loadFeedbackCounts(){
+  const {data}=await sb.from('feedbacks').select('team_id');
+  const counts={};
+  (data||[]).forEach(r=>{counts[r.team_id]=(counts[r.team_id]||0)+1;});
+  return counts;
+}
+async function loadFeedbacks(teamId){
+  const {data}=await sb.from('feedbacks').select('*').eq('team_id',teamId).order('created_at',{ascending:false});
+  return data||[];
+}
+async function loadStory(teamId){
+  const {data}=await sb.from('stories').select('*').eq('id',teamId).single();
+  return data||null;
+}
+
+// ── 카운트 업데이트 ──
+function updateCounts(teams){
+  ['game','meta','story','art'].forEach(c=>{
+    document.getElementById('cnt-'+c).textContent=teams.filter(t=>t.type===c).length;
+  });
+  document.getElementById('cnt-all').textContent=teams.length;
+}
+
+// ── 프로젝트 렌더 ──
+async function renderProject(cat){
+  document.getElementById('main-area').innerHTML=`<div class="loading"><div class="spinner"></div> 불러오는 중...</div>`;
+  if(!teamsCache.length){
+    teamsCache=await loadTeams();
+    feedbackCounts=await loadFeedbackCounts();
+    updateCounts(teamsCache);
+  }
+  const list=cat==='all'?teamsCache:teamsCache.filter(t=>t.type===cat);
+  const i=CI[cat];
+  document.getElementById('main-area').innerHTML=`
+    <div class="cat-header"><div class="cat-title">${i.emoji} ${i.label}</div><div class="cat-desc">${i.desc}</div></div>
+    <div class="cards-grid">${list.map(t=>`
+      <div class="team-card" onclick="openProjectModal(${t.id})">
+        <div class="card-thumb" style="background:${t.thumb_url?'#000':TB[t.type]}">
+          ${t.thumb_url?`<img src="${t.thumb_url}" alt="썸네일">`:`<span>${t.emoji}</span>`}
+          <span class="card-badge ${TBADGE[t.type]}">${TL[t.type]}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-pname">${t.project||'(제목 없음)'}</div>
+          <div class="card-team">${t.team}</div>
+          <div class="card-org">${t.org}</div>
+        </div>
+        <div class="card-footer">
+          <span class="card-cmt">💬 ${feedbackCounts[t.id]||0}개</span>
+          <span style="font-size:13px;color:#A0A0C0">›</span>
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ── 프로젝트 모달 ──
+async function openProjectModal(id){
+  document.getElementById('modal-inner').innerHTML=`<div class="loading" style="height:300px"><div class="spinner"></div> 불러오는 중...</div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  const t=teamsCache.find(x=>x.id===id);
+  buildProjectModal(t,'info');
+}
+
+function buildProjectModal(t,tab){
+  const feedbacks_html=`<div class="loading" style="height:120px"><div class="spinner"></div></div>`;
+  document.getElementById('modal-inner').innerHTML=`
+    <div style="padding-top:.5rem;"></div>
+    <div class="modal-tabs">
+      <button class="modal-tab ${tab==='info'?'active':''}" onclick="switchProjectTab(${t.id},'info',this)">프로젝트 정보</button>
+      <button class="modal-tab ${tab==='feedback'?'active':''}" onclick="switchProjectTab(${t.id},'feedback',this)">피드백</button>
+    </div>
+    ${tab==='info'?buildProjectInfo(t):buildFeedbackShell(t.id)}
+  `;
+  if(tab==='feedback') loadAndRenderFeedbacks(t.id);
+}
+
+function switchProjectTab(id,tab,btn){
+  const t=teamsCache.find(x=>x.id===id);
+  buildProjectModal(t,tab);
+}
+
+function buildProjectInfo(t){
+  const thumbContent=t.thumb_url
+    ?`<img src="${t.thumb_url}" alt="썸네일">`
+    :`<div class="thumb-placeholder">${t.emoji}<span>썸네일 없음 — 수정하기를 눌러 추가하세요</span></div>`;
+  const linkOverlay=t.link
+    ?`<div class="thumb-link-overlay"><button class="thumb-link-btn" onclick="window.open('${t.link}','_blank')">🔗 프로젝트 열기</button></div>`
+    :`<div class="thumb-link-overlay"><button class="thumb-link-btn" onclick="openProjectEdit(${t.id})">링크 추가하기</button></div>`;
+  return `
+    <div>
+      <div class="modal-type-bar"><span class="modal-type-badge" style="${BS[t.type]}">${t.emoji} ${TL[t.type]}</span></div>
+      <div class="modal-title">${t.project||'(제목 없음)'}</div>
+      <div class="thumb-wrap">${thumbContent}${linkOverlay}</div>
+      <div class="modal-meta">
+        <span class="meta-chip">🏫 <strong>${t.org}</strong></span>
+        <span class="meta-chip">👥 <strong>${t.team}</strong></span>
+        <span class="meta-chip">✏️ ${(t.members||[]).join(' · ')}</span>
+      </div>
+      <div class="modal-desc"><div class="modal-desc-label">프로젝트 소개</div>${t.description||'(소개글 없음 — 수정하기를 눌러 입력하세요)'}</div>
+      <button class="modal-edit-btn" onclick="openProjectEdit(${t.id})">✏️ 내용 수정하기</button>
+    </div>`;
+}
+
+function buildFeedbackShell(id){
+  const allTeams=teamsCache.map(t=>`<option value="${t.team}">${t.team}</option>`).join('');
+  const catOpts=FCATS.map(f=>`<option value="${f.val}">${f.label}</option>`).join('');
+  return `
+    <div class="feedback-section">
+      <div class="feedback-title">💬 동료 피드백 <span class="feedback-count" id="fb-count"></span></div>
+      <div class="feedback-form">
+        <div class="form-row1">
+          <select class="form-select" id="f-cat" style="min-width:110px;">
+            <option value="" disabled selected>관점 선택</option>${catOpts}
+          </select>
+          <select class="form-select" id="f-team" style="flex:1;">
+            <option value="" disabled selected>우리 팀 선택</option>${allTeams}
+          </select>
+        </div>
+        <textarea class="form-textarea" id="f-text" rows="3" placeholder="동료 창작자로서 솔직하고 따뜻한 피드백을 남겨주세요 ✍️"></textarea>
+        <div class="form-bottom">
+          <span class="form-hint">관점과 팀을 먼저 선택해주세요</span>
+          <button class="btn-submit" id="fb-submit-btn" onclick="submitFeedback(${id})">피드백 남기기</button>
+        </div>
+      </div>
+      <div class="feedback-list" id="feedback-list-${id}">
+        <div class="loading" style="height:80px"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+}
+
+async function loadAndRenderFeedbacks(id){
+  const feedbacks=await loadFeedbacks(id);
+  document.getElementById('fb-count').textContent=`${feedbacks.length}개`;
+  const el=document.getElementById(`feedback-list-${id}`);
+  if(!el)return;
+  if(!feedbacks.length){el.innerHTML=`<div class="no-feedback">아직 피드백이 없어요.<br>첫 번째 피드백을 남겨보세요! 🎨</div>`;return;}
+  el.innerHTML=feedbacks.map((c,i)=>{
+    const fc=fcatInfo(c.category);
+    const color=AV_COLORS[i%AV_COLORS.length];
+    return `<div class="feedback-item">
+      <div class="fi-header">
+        <div class="fi-avatar" style="background:${color}22;color:${color};border:1px solid ${color}44">${(c.from_team||'?').charAt(0)}</div>
+        <span class="fi-team">${c.from_team}</span>
+        <span class="ftag ${fc.cls}">${fc.label}</span>
+        <span class="fi-time">${timeAgo(c.created_at)}</span>
+      </div>
+      <div class="fi-text">${c.content}</div>
+      <button class="fi-like" onclick="toggleLike(this,'${c.id}',${c.likes})">♥ ${c.likes}</button>
+    </div>`;
+  }).join('');
+}
+
+async function submitFeedback(id){
+  const cat=document.getElementById('f-cat').value;
+  const team=document.getElementById('f-team').value;
+  const text=document.getElementById('f-text').value.trim();
+  if(!cat){showToast('⚠️ 피드백 관점을 선택해주세요!');return;}
+  if(!team){showToast('⚠️ 우리 팀을 선택해주세요!');return;}
+  if(!text){showToast('⚠️ 피드백 내용을 입력해주세요!');return;}
+  const btn=document.getElementById('fb-submit-btn');
+  btn.disabled=true;btn.textContent='저장 중...';
+  const {error}=await sb.from('feedbacks').insert({team_id:id,from_team:team,category:cat,content:text,likes:0});
+  if(error){showToast('❌ 저장 실패. 다시 시도해주세요.');btn.disabled=false;btn.textContent='피드백 남기기';return;}
+  feedbackCounts[id]=(feedbackCounts[id]||0)+1;
+  showToast('✅ 피드백이 저장됐어요!');
+  document.getElementById('f-text').value='';
+  await loadAndRenderFeedbacks(id);
+  btn.disabled=false;btn.textContent='피드백 남기기';
+}
+
+async function toggleLike(btn,feedbackId,currentLikes){
+  const newLikes=currentLikes+1;
+  await sb.from('feedbacks').update({likes:newLikes}).eq('id',feedbackId);
+  btn.textContent=`♥ ${newLikes}`;
+  btn.classList.add('liked');
+}
+
+// ── 프로젝트 편집 ──
+function openProjectEdit(id){
+  const t=teamsCache.find(x=>x.id===id);
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-edit">
+      <div class="edit-title">✏️ 프로젝트 정보 입력</div>
+      <div class="field"><div class="field-label">프로젝트 제목</div>
+        <input class="field-input" id="e-project" value="${t.project||''}" placeholder="프로젝트 이름"></div>
+      <div class="field"><div class="field-label">썸네일 이미지 (4:3 권장)</div>
+        <div class="thumb-upload" id="thumb-upload-area">
+          <img id="thumb-preview" src="${t.thumb_url||''}" style="display:${t.thumb_url?'block':'none'};">
+          <div id="thumb-ph" style="display:${t.thumb_url?'none':'flex'};flex-direction:column;align-items:center;gap:6px;">
+            <span style="font-size:32px">🖼</span><span style="font-size:12px;color:#A0A0C0">클릭하여 이미지 업로드</span>
+          </div>
+          <input type="file" id="thumb-file" accept="image/*">
+        </div></div>
+      <div class="field"><div class="field-label">프로젝트 링크</div>
+        <input class="field-input" id="e-link" value="${t.link||''}" placeholder="https://...">
+        <div class="field-hint">게임 링크, 유튜브, PDF 등 무엇이든 가능해요</div></div>
+      <div class="field"><div class="field-label">기관명</div>
+        <input class="field-input" id="e-org" value="${t.org||''}"></div>
+      <div class="field"><div class="field-label">팀명</div>
+        <input class="field-input" id="e-team" value="${t.team||''}"></div>
+      <div class="field"><div class="field-label">팀원 이름 (쉼표로 구분)</div>
+        <input class="field-input" id="e-members" value="${(t.members||[]).join(', ')}"></div>
+      <div class="field"><div class="field-label">프로젝트 소개</div>
+        <textarea class="field-input textarea" id="e-desc">${t.description||''}</textarea></div>
+      <div class="edit-actions">
+        <button class="btn-cancel" onclick="buildProjectModal(teamsCache.find(x=>x.id===${id}),'info')">취소</button>
+        <button class="btn-save" id="save-btn" onclick="saveProjectEdit(${id})">저장하기 ✓</button>
+      </div>
+    </div>`;
+  document.getElementById('thumb-file').addEventListener('change',function(){
+    const file=this.files[0];if(!file)return;
+    const r=new FileReader();
+    r.onload=e=>{
+      document.getElementById('thumb-preview').src=e.target.result;
+      document.getElementById('thumb-preview').style.display='block';
+      document.getElementById('thumb-ph').style.display='none';
+    };r.readAsDataURL(file);
+  });
+}
+
+async function saveProjectEdit(id){
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.textContent='저장 중...';
+  let thumbUrl=teamsCache.find(x=>x.id===id)?.thumb_url||'';
+  const fileInput=document.getElementById('thumb-file');
+  if(fileInput.files[0]){
+    const file=fileInput.files[0];
+    const ext=file.name.split('.').pop();
+    const path=`team_${id}_${Date.now()}.${ext}`;
+    const {data:upData,error:upErr}=await sb.storage.from('thumbnails').upload(path,file,{upsert:true});
+    if(!upErr){
+      const {data:urlData}=sb.storage.from('thumbnails').getPublicUrl(path);
+      thumbUrl=urlData.publicUrl;
+    }
+  }
+  const patch={
+    project:document.getElementById('e-project').value.trim(),
+    link:document.getElementById('e-link').value.trim(),
+    org:document.getElementById('e-org').value.trim(),
+    team:document.getElementById('e-team').value.trim(),
+    members:document.getElementById('e-members').value.split(',').map(s=>s.trim()).filter(Boolean),
+    description:document.getElementById('e-desc').value.trim(),
+    thumb_url:thumbUrl,
+    updated_at:new Date().toISOString(),
+  };
+  const {error}=await sb.from('teams').update(patch).eq('id',id);
+  if(error){showToast('❌ 저장 실패. 다시 시도해주세요.');btn.disabled=false;btn.textContent='저장하기 ✓';return;}
+  const idx=teamsCache.findIndex(x=>x.id===id);
+  teamsCache[idx]={...teamsCache[idx],...patch};
+  showToast('✅ 저장됐어요!');
+  const a=document.querySelector('.sub-item.active');
+  renderProject(a?a.id.replace('sub-',''):'all');
+  buildProjectModal(teamsCache[idx],'info');
+}
+
+// ── PYP 스토리 ──
+async function showStoryPage(btn){
+  document.getElementById('menu-project').classList.remove('active');
+  document.getElementById('menu-story').classList.add('active');
+  document.getElementById('sub-project').classList.remove('open');
+  document.getElementById('arrow-project').classList.remove('open');
+  document.querySelectorAll('.sub-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('main-area').innerHTML=`<div class="loading"><div class="spinner"></div> 불러오는 중...</div>`;
+  if(!teamsCache.length){teamsCache=await loadTeams();updateCounts(teamsCache);}
+  const {data:stories}=await sb.from('stories').select('*');
+  const storyMap={};(stories||[]).forEach(s=>storyMap[s.id]=s);
+  const filledCount=teamsCache.filter(t=>storyMap[t.id]&&(storyMap[t.id].thrill||storyMap[t.id].hard||storyMap[t.id].know_text)).length;
+  document.getElementById('main-area').innerHTML=`
+    <div class="story-hero"><div class="story-hero-bg"></div>
+      <div class="story-hero-label">PYP STORY</div>
+      <h2>창작을 통한 우리들의 성장 이야기</h2>
+      <p>아이디어의 설렘부터 막막함, 그리고 완성의 뿌듯함까지 —<br>18개 팀의 솔직한 창작 여정을 만나보세요.</p>
+    </div>
+    <div style="display:flex;align-items:center;margin-bottom:1rem;">
+      <div style="font-size:12px;color:#A0A0C0;">총 <strong style="color:#fff">${filledCount}</strong>개 팀이 스토리를 작성했어요</div>
+    </div>
+    <div class="story-cards-grid">
+      ${teamsCache.map(t=>{
+        const s=storyMap[t.id];
+        const pills=[
+          {label:'⚡ 짜릿한 순간',done:!!(s&&s.thrill)},
+          {label:'😤 어려움+해결',done:!!(s&&s.hard)},
+          {label:'💡 나만의 노하우',done:!!(s&&s.know_text)},
+        ];
+        const filled=pills.some(p=>p.done);
+        return `<div class="story-team-card" onclick="openStoryModal(${t.id})">
+          <div class="stc-top"><span class="stc-emoji">${t.emoji}</span>
+            <span class="stc-type-badge" style="${BS[t.type]}">${TL[t.type]}</span></div>
+          <div class="stc-team">${t.team}</div>
+          <div class="stc-org">${t.org}</div>
+          <div class="stc-pills">${pills.map(p=>`<span class="stc-pill ${p.done?'pill-filled':'pill-empty'}">${p.label}</span>`).join('')}</div>
+          <div class="stc-footer">
+            <span class="${filled?'status-done':'status-empty'}">${filled?'✓ 스토리 작성 완료':'스토리 미작성'}</span>
+            <span style="font-size:13px;color:#A0A0C0">›</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function openStoryModal(id){
+  document.getElementById('modal-inner').innerHTML=`<div class="loading" style="height:300px"><div class="spinner"></div></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  const t=teamsCache.find(x=>x.id===id);
+  const s=await loadStory(id);
+  buildStoryView(t,s);
+}
+
+function buildStoryView(t,s){
+  const filled=s&&(s.thrill||s.hard||s.know_text);
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="sv-header">
+      <span class="sv-type" style="${BS[t.type]}">${t.emoji} ${TL[t.type]}</span>
+      <div class="sv-team">${t.team}</div>
+      <div class="sv-org">${t.org} · ${t.project||''}</div>
+      <div class="sv-members">${(t.members||[]).map(m=>`<span class="sv-member">${m}</span>`).join('')}</div>
+    </div>
+    <div class="sv-body">
+      <div class="story-block">
+        <div class="sb-label"><span>⚡</span><span class="label-thrill">가장 짜릿했던 순간</span></div>
+        ${s&&s.thrill?`<div class="sb-content">${s.thrill}</div>`:`<div class="sb-empty">아직 작성되지 않았어요.</div>`}
+      </div>
+      <div class="story-block">
+        <div class="sb-label"><span>😤</span><span class="label-hard">가장 어려웠던 순간 & 해결 방법</span></div>
+        ${s&&s.hard?`<div class="sb-content">${s.hard}</div>`:`<div class="sb-empty">아직 작성되지 않았어요.</div>`}
+      </div>
+      <div class="story-block">
+        <div class="sb-label"><span>💡</span><span class="label-how">나만의 노하우</span></div>
+        ${s&&s.know_keyword&&s.know_text
+          ?`<div class="know-keyword">나만의 "${s.know_keyword}" 노하우는?</div><div class="sb-content">${s.know_text}</div>`
+          :`<div class="sb-empty">아직 작성되지 않았어요.</div>`}
+      </div>
+    </div>
+    <button class="sv-edit-btn" onclick="openStoryEdit(${t.id})">✏️ ${filled?'스토리 수정하기':'스토리 입력하기'}</button>`;
+}
+
+function openStoryEdit(id){
+  const t=teamsCache.find(x=>x.id===id);
+  loadStory(id).then(s=>{
+    s=s||{};
+    const kwOpts=KNOW_KEYWORDS.map(k=>`<option value="${k}" ${s.know_keyword===k?'selected':''}>${k}</option>`).join('');
+    document.getElementById('modal-inner').innerHTML=`
+      <div class="modal-edit">
+        <div class="edit-title">✏️ ${t.team} 스토리 입력</div>
+        <div class="field">
+          <div class="field-label">⚡ 창작 과정 중 가장 짜릿했던 순간</div>
+          <textarea class="field-input textarea" id="s-thrill" placeholder="완성의 순간, 아이디어가 떠올랐을 때 등 자유롭게 써주세요!">${s.thrill||''}</textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">😤 가장 어려웠던 순간과 해결 방법</div>
+          <textarea class="field-input textarea" id="s-hard" placeholder="어떤 어려움이 있었고, 어떻게 극복했는지 솔직하게 써주세요.">${s.hard||''}</textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">💡 나만의 OOO 노하우</div>
+          <div class="field-hint" style="margin-bottom:8px;">키워드를 먼저 선택하면 제목이 완성돼요 ✨</div>
+          <div class="know-row">
+            <select class="know-select" id="s-kwkey">
+              <option value="" disabled ${!s.know_keyword?'selected':''}>키워드 선택</option>${kwOpts}
+            </select>
+            <textarea class="know-textarea" id="s-kwtext" placeholder="나만의 노하우를 자유롭게 적어주세요!">${s.know_text||''}</textarea>
+          </div>
+          <div class="field-hint" id="kw-preview" style="margin-top:6px;color:#5eeac5;">
+            ${s.know_keyword?`→ 나만의 "${s.know_keyword}" 노하우는?`:''}</div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-cancel" onclick="openStoryModal(${id})">취소</button>
+          <button class="btn-save" id="story-save-btn" onclick="saveStory(${id})">저장하기 ✓</button>
+        </div>
+      </div>`;
+    document.getElementById('s-kwkey').addEventListener('change',function(){
+      document.getElementById('kw-preview').textContent=`→ 나만의 "${this.value}" 노하우는?`;
+    });
+  });
+}
+
+async function saveStory(id){
+  const btn=document.getElementById('story-save-btn');
+  btn.disabled=true;btn.textContent='저장 중...';
+  const payload={
+    id,
+    thrill:document.getElementById('s-thrill').value.trim(),
+    hard:document.getElementById('s-hard').value.trim(),
+    know_keyword:document.getElementById('s-kwkey').value,
+    know_text:document.getElementById('s-kwtext').value.trim(),
+    updated_at:new Date().toISOString(),
+  };
+  const {error}=await sb.from('stories').upsert(payload,{onConflict:'id'});
+  if(error){showToast('❌ 저장 실패. 다시 시도해주세요.');btn.disabled=false;btn.textContent='저장하기 ✓';return;}
+  showToast('✅ 스토리가 저장됐어요!');
+  const t=teamsCache.find(x=>x.id===id);
+  buildStoryView(t,payload);
+}
+
+// ── 사이드바 ──
+function filterCat(cat,btn){
+  document.querySelectorAll('.sub-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('menu-project').classList.add('active');
+  document.getElementById('menu-story').classList.remove('active');
+  renderProject(cat);
+}
+function toggleProject(){
+  const sub=document.getElementById('sub-project'),arrow=document.getElementById('arrow-project');
+  const open=sub.classList.contains('open');
+  if(open){sub.classList.remove('open');arrow.classList.remove('open');}
+  else{
+    sub.classList.add('open');arrow.classList.add('open');
+    document.getElementById('menu-project').classList.add('active');
+    document.getElementById('menu-story').classList.remove('active');
+    const a=document.querySelector('.sub-item.active');
+    renderProject(a?a.id.replace('sub-',''):'all');
+  }
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+// ── 초기화 ──
+renderProject('all');
+</script>
+</body>
+</html>
