@@ -322,7 +322,7 @@ async function renderProject(cat){
     feedbackCounts=await loadFeedbackCounts();
     updateCounts(teamsCache);
   }
-  const list=cat==='all'?teamsCache:teamsCache.filter(t=>t.type===cat);
+  const list = (cat==='all'?teamsCache:teamsCache.filter(t=>t.type===cat)).filter(t=>!t.hide_project);
   const i=CI[cat];
   document.getElementById('main-area').innerHTML=`
     <div class="cat-header"><div class="cat-title">${i.emoji} ${i.label}</div><div class="cat-desc">${i.desc}</div></div>
@@ -567,7 +567,7 @@ async function showStoryPage(btn){
       <div style="font-size:12px;color:#A0A0C0;">총 <strong style="color:#fff">${filledCount}</strong>개 팀이 스토리를 작성했어요</div>
     </div>
     <div class="story-cards-grid">
-      ${teamsCache.map(t=>{
+      ${teamsCache.filter(t=>!t.hide_story).map(t=>{
         const s=storyMap[t.id];
         const pills=[
           {label:'⚡ 짜릿한 순간',done:!!(s&&s.thrill)},
